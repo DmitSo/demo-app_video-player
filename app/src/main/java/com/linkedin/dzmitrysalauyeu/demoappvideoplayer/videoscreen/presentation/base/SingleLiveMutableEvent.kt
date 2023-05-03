@@ -8,6 +8,10 @@ import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
+ * At these times it was normal actually before SharedFlow appeared on the stage so no blame
+ */
+
+/**
  * A lifecycle-aware observable that sends only new updates after subscription, used for events like
  * navigation and Snackbar messages.
  * <p>

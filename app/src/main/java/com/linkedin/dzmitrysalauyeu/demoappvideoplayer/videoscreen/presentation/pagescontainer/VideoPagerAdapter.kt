@@ -16,6 +16,9 @@ class VideoPagerAdapter: ListAdapter<String, VideoPagerAdapter.VideoPageViewHold
     }
 ) {
 
+    /**
+     * Self-roast: Well-well-well... List adapter with submitList method be like: Am I joke for you?
+     */
     var videoUrlItems = listOf<String>()
     set(value) {
         field = value
@@ -38,6 +41,7 @@ class VideoPagerAdapter: ListAdapter<String, VideoPagerAdapter.VideoPageViewHold
     override fun onBindViewHolder(holder: VideoPageViewHolder, position: Int) {
         holder.binding.root.tag = holder
         holder.url = videoUrlItems[position]
+        // Self-roast: should access item safer. Just to be sure -.-
     }
 
     inner class VideoPageViewHolder(val binding: ItemVideoPageBinding): RecyclerView.ViewHolder(binding.root) {

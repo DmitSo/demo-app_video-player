@@ -1,5 +1,6 @@
 package com.linkedin.dzmitrysalauyeu.demoappvideoplayer.di.modules
 
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.BuildConfig
 import dagger.Module
@@ -19,7 +20,7 @@ class BaseNetworkingModule {
 
     @Provides
     @Singleton
-    fun provideBaseGson() = GsonBuilder()
+    fun provideBaseGson(): Gson = GsonBuilder()
         .create()
 
     @Provides
@@ -40,7 +41,7 @@ class BaseNetworkingModule {
 
     @Provides
     @Singleton
-    fun provideBaseRetrofitBuilder(baseOkHttpClient: OkHttpClient) =
+    fun provideBaseRetrofitBuilder(baseOkHttpClient: OkHttpClient): Retrofit.Builder =
         Retrofit.Builder()
             .client(baseOkHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
