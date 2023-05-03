@@ -16,6 +16,7 @@ If error, display info at the corresponding page
 
 # Self-roast
 The original has made 1.5 years ago so I can see some non-optimal solutions from the current perspective.
+You can see the places if you'll search comments containing "Self-roast" string
 
 # Used tech-stack
 * **Language:** Kotlin
