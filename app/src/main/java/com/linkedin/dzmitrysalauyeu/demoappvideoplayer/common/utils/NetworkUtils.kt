@@ -1,6 +1,8 @@
 package com.linkedin.dzmitrysalauyeu.demoappvideoplayer.common.utils
 
 import okhttp3.OkHttpClient
+import okhttp3.ResponseBody
+import java.lang.Exception
 import java.security.SecureRandom
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
@@ -38,4 +40,8 @@ fun OkHttpClient.Builder.ignoreSecurityCertificates() : OkHttpClient.Builder {
     hostnameVerifier(hostnameVerifier = HostnameVerifier { _, _ -> true })
 
     return this
+}
+
+fun mapNetworkError(errorBody: ResponseBody?): Throwable {
+    return Exception(errorBody?.string())
 }

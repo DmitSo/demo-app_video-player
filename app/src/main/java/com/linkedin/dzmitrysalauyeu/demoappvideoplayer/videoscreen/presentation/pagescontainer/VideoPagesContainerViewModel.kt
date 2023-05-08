@@ -2,33 +2,51 @@ package com.linkedin.dzmitrysalauyeu.demoappvideoplayer.videoscreen.presentation
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.common.utils.ScreenGeneralState
 import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.videoscreen.presentation.base.BaseViewModel
-import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.videoscreen.data.apiservice.VideoPagesInfoApiService
+import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.videoscreen.data.repository.VideoPageInfoRepository
 import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.videoscreen.domain.pojo.VideoPagesInfoModel
-import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.videoscreen.presentation.converters.toModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class VideoPagesContainerViewModel @Inject constructor(
-    val infoApiService: VideoPagesInfoApiService    // Self-roast: private
-): BaseViewModel() {
+    private val videoPageInfoRepository: VideoPageInfoRepository
+) : BaseViewModel() {
 
     private val _videoPagesInfo = MutableLiveData<VideoPagesInfoModel>()
     val videoPagesInfo: LiveData<VideoPagesInfoModel> = _videoPagesInfo
 
-    fun requestVideoPagesInfo() {
-        /**
-         * Self-roast: check _videoPagesInfo.value == null first to not to make too much requests if data present.
-         * Or you could make caching mechanism where you can check if new response are the same as saved or not
-         * AND it is not welcomed to use apiService directly. For this task it might be ok BUT
-         * VM shouldn't know about service, use repository instead
-         * AND Don't forget to make error handling here.
-         */
-        makeCall(infoApiService.getVideoPagesInfoResult(), {
+    private val _playbackLastTimeCodeMs = mutableMapOf<Int, Long>()
 
-            // TODO
-            _videoPagesInfo.postValue(it.body()?.toModel())
-        })
+    var activeVideoId: Int = 0
+        private set
+
+    fun requestVideoPagesInfo() {
+        makeCall(
+            videoPageInfoRepository.getVideoPagesInfo(),
+            onSuccess = { if (_videoPagesInfo.value != it) _videoPagesInfo.postValue(it) },
+        )
+    }
+
+    fun saveTimeCode(videoId: Int, timeCodeMs: Long, videoDurationMs: Long) {
+        activeVideoId = videoId
+        _playbackLastTimeCodeMs[videoId] = timeCodeMs
+            .takeIf { videoDurationMs - it > MAX_VIDEO_FINISH_OFFSET_MS }
+            ?: DEFAULT_VIDEO_START_TIMESTAMP
+    }
+
+    fun getLastTimeCode(videoId: Int) = _playbackLastTimeCodeMs[videoId] ?: kotlin.run{
+        saveTimeCode(videoId, DEFAULT_VIDEO_START_TIMESTAMP, Long.MAX_VALUE)
+        DEFAULT_VIDEO_START_TIMESTAMP
+    }
+
+    fun displayVideoNotFoundError() {
+        _screenGeneralState.postValue(ScreenGeneralState.ErrorScreenGeneralState(Exception("123")))
+    }
+
+    companion object {
+        private const val DEFAULT_VIDEO_START_TIMESTAMP = 0L
+        private const val MAX_VIDEO_FINISH_OFFSET_MS = 2500L
     }
 }

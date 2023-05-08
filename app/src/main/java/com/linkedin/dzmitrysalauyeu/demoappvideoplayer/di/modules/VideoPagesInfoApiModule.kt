@@ -1,5 +1,6 @@
 package com.linkedin.dzmitrysalauyeu.demoappvideoplayer.di.modules
 
+import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.BuildConfig
 import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.di.annotations.VideoPagesInfoApi
 import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.common.utils.ignoreSecurityCertificates
 import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.videoscreen.data.apiservice.VideoPagesInfoApiService
@@ -15,14 +16,10 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 class VideoPagesInfoApiModule {
 
-    /**
-     * Base URL for accessing the video
-     * Self-roast: could be in build.gradle
-     */
     @Provides
     @Singleton
     @VideoPagesInfoApi
-    fun provideVideoPagesInfoBaseUrl() = "https://89.208.230.60/"
+    fun provideVideoPagesInfoBaseUrl() = BuildConfig.BASE_URL_VIDEO_PAGES_INFO
 
     @Provides
     @Singleton

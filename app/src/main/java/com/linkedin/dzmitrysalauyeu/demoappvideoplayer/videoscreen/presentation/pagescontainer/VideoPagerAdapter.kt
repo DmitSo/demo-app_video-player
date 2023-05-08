@@ -2,35 +2,29 @@ package com.linkedin.dzmitrysalauyeu.demoappvideoplayer.videoscreen.presentation
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.R
 import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.databinding.ItemVideoPageBinding
 
-class VideoPagerAdapter: ListAdapter<String, VideoPagerAdapter.VideoPageViewHolder>(
+class VideoPagerAdapter : ListAdapter<String, VideoPagerAdapter.VideoPageViewHolder>(
     object : DiffUtil.ItemCallback<String>() {
         override fun areItemsTheSame(oldItem: String, newItem: String) = oldItem === newItem
         override fun areContentsTheSame(oldItem: String, newItem: String) = oldItem == newItem
     }
 ) {
 
-    /**
-     * Self-roast: Well-well-well... List adapter with submitList method be like: Am I joke for you?
-     */
     var videoUrlItems = listOf<String>()
-    set(value) {
-        field = value
-        notifyDataSetChanged()
-    }
+        set(value) {
+            field = value
+            submitList(field)
+        }
 
     override fun getItemCount() = videoUrlItems.size
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoPageViewHolder {
-        val binding = DataBindingUtil.inflate<ItemVideoPageBinding>(
+        val binding = ItemVideoPageBinding.inflate(
             LayoutInflater.from(parent.context),
-            R.layout.item_video_page,
             parent,
             false
         )
@@ -40,11 +34,12 @@ class VideoPagerAdapter: ListAdapter<String, VideoPagerAdapter.VideoPageViewHold
 
     override fun onBindViewHolder(holder: VideoPageViewHolder, position: Int) {
         holder.binding.root.tag = holder
-        holder.url = videoUrlItems[position]
-        // Self-roast: should access item safer. Just to be sure -.-
+        holder.url = videoUrlItems.getOrNull(position)
     }
 
-    inner class VideoPageViewHolder(val binding: ItemVideoPageBinding): RecyclerView.ViewHolder(binding.root) {
+    inner class VideoPageViewHolder(
+        val binding: ItemVideoPageBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
         var url: String? = null
     }
 }

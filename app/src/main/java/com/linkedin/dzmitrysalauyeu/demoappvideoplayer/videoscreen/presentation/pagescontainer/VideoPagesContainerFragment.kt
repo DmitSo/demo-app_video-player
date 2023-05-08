@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.RecyclerView
@@ -18,7 +17,12 @@ import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.BuildConfig
-import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.R
+import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.common.utils.ScreenGeneralState
+import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.common.utils.ScreenGeneralState.ErrorScreenGeneralState
+import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.common.utils.ScreenGeneralState.LoadingScreenGeneralState
+import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.common.utils.ScreenGeneralState.NormalScreenGeneralState
+import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.common.utils.makeAlert
+import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.common.utils.makeErrorAlert
 import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.databinding.FragmentVideoPagesContainerBinding
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -26,65 +30,50 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class VideoPagesContainerFragment : Fragment() {
 
-    /**
-     * Lateinits.. idk, if you can use it, you can use it
-     */
-
     private val viewModel: VideoPagesContainerViewModel by viewModels()
     private lateinit var binding: FragmentVideoPagesContainerBinding
 
     private var activeVideoContainer: ViewGroup? = null
+    private var pageRecycler: RecyclerView? = null
 
     private val pagerAdapter = VideoPagerAdapter()
+    private var activePagerPosition: Int? = null
+    private var pageChangeCallback: ViewPager2.OnPageChangeCallback? = null
+
     private lateinit var videoSurfaceView: PlayerView
     private lateinit var videoPlayer: SimpleExoPlayer
 
     private lateinit var videoDataSourceFactory: DefaultDataSourceFactory
 
-    /**
-     * Self-roast: Data binding functionality haven't been used. Better to use ViewBinding or Compose
-     */
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = DataBindingUtil.inflate(
-            inflater,
-            R.layout.fragment_video_pages_container,
-            container, false
-        )
+        binding = FragmentVideoPagesContainerBinding.inflate(inflater, container, false)    
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         observeViewModelChanges()
-        initVideoPlayer()
-        setupVideoPager()
-
+        binding.videoPagerSwipeRefresh.setOnRefreshListener { viewModel.requestVideoPagesInfo() }
         viewModel.requestVideoPagesInfo()
     }
 
-    /**
-     * Self-roast: should handle reinitializing at onResume, moving impl from onViewCreated!
-     * Also should save playback state of the active item and its position
-     * for screen rotation (VM, onSaveInstanceState, etc)
-     * Like that:
-     */
-//    override fun onResume() {
-//        super.onResume()
-//        initVideoPlayer()
-//        setupVideoPager()
-//        mySuperMethodToSaveState()
-//    }
+    override fun onStart() {
+        super.onStart()
+        initVideoPlayer()
+        setupVideoPager()
+        viewModel.activeVideoId.takeIf { it < pagerAdapter.videoUrlItems.size }?.let {
+            pageRecycler?.scrollToPosition(it)
+        }
+        restoreStateForCurrentPage()
+    }
 
-    /**
-     * Self-roast: following should be at onStop instead of onDestroy: when going to background, playback are active
-     */
-    override fun onDestroy() {
-        super.onDestroy()
-
-        // release player
+    override fun onStop() {
+        super.onStop()
+        savePlaybackState()
+        pageChangeCallback?.let { binding.videoPager.unregisterOnPageChangeCallback(it) }
         videoSurfaceView.player = null
         videoPlayer.release()
     }
@@ -102,41 +91,54 @@ class VideoPagesContainerFragment : Fragment() {
     }
 
     private fun setupVideoPager() {
+        pageRecycler = (binding.videoPager.getChildAt(0) as? RecyclerView) ?: return
+        val callback = object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                savePlaybackState()
+                activeVideoContainer?.let { cleanView(it) }
+                activeVideoContainer = null
+
+                // get corresponding view to put video view in
+                // by getting viewholder and accessing the view from it
+
+                val recycler = pageRecycler ?: return
+                val newActiveView = recycler.findViewHolderForAdapterPosition(position) ?: return
+                val pageViewHolder = (newActiveView as? VideoPagerAdapter.VideoPageViewHolder) ?: return
+                val newContainer = pageViewHolder.binding.videoContentContainer
+                activeVideoContainer = newContainer
+                activePagerPosition = position
+                setVideoPlayerIntoView(newContainer)
+
+                // load video by url
+                pageViewHolder.url?.let { url ->
+                    setVideoUriToPage(url)
+                } ?: run {
+                    viewModel.displayVideoNotFoundError()
+                }
+                restoreStateForCurrentPage()
+            }
+        }
+        pageChangeCallback = callback
+
         with(binding.videoPager) {
             adapter = pagerAdapter
-            registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-                override fun onPageSelected(position: Int) {
-                    super.onPageSelected(position)
-                    activeVideoContainer?.let { cleanView(it) }
-                    activeVideoContainer = null
+            registerOnPageChangeCallback(callback)
+        }
+    }
 
-                    // get corresponding view to put video view in
-                    // by getting viewholder and accessing the view from it
+    private fun savePlaybackState() {
+        activePagerPosition?.let {
+            val playbackPosition = videoPlayer.currentPosition
+            val duration = videoPlayer.duration
+            viewModel.saveTimeCode(it, playbackPosition, duration)
+        }
+    }
 
-                    /**
-                     * Self-roast: Styling should be more linear, avoid "!!",
-                     * add error processing right here or in VM
-                     */
-
-                    // View == RecyclerView of viewpager
-                    (getChildAt(0) as? RecyclerView)
-                        // View == the item itself
-                        ?.findViewHolderForAdapterPosition(position) ?.let {
-                            // get viewholder stored in view as a tag
-                            (it as? VideoPagerAdapter.VideoPageViewHolder)?.let {
-                                activeVideoContainer = it.binding.videoContentContainer
-                                setVideoPlayerIntoView(activeVideoContainer!!)
-
-                                // load video by url
-                                if (it.url != null) {
-                                    setVideoUriToPage(it.url!!)
-                                } else {
-                                    // TODO
-                                }
-                            }
-                        }
-                }
-            })
+    private fun restoreStateForCurrentPage() {
+        activePagerPosition?.let {
+            val timeCode = viewModel.getLastTimeCode(it)
+            videoPlayer.seekTo(timeCode)
         }
     }
 
@@ -157,6 +159,29 @@ class VideoPagesContainerFragment : Fragment() {
                 it.fourthVideoUrl
             )
             pagerAdapter.videoUrlItems = videoUrls
+        }
+        viewModel.screenGeneralState.observe(viewLifecycleOwner) {
+            binding.videoPagerSwipeRefresh.isRefreshing = false
+            when(it) {
+                is NormalScreenGeneralState -> {
+                    binding.loadingErrorMidscreenImage.visibility = View.GONE
+                    binding.loadingFrame.visibility = View.GONE
+                }
+                is LoadingScreenGeneralState -> {
+                    binding.loadingErrorMidscreenImage.visibility = View.GONE
+                    binding.loadingFrame.visibility = View.VISIBLE
+                }
+                is ErrorScreenGeneralState -> {
+                    binding.loadingFrame.visibility = View.GONE
+                    val throwable = it.t
+                    context?.let {
+                        makeErrorAlert(it, throwable) {
+                            viewModel.resetError()
+                            binding.loadingErrorMidscreenImage.visibility = View.VISIBLE
+                        }
+                    }
+                }
+            }
         }
     }
 

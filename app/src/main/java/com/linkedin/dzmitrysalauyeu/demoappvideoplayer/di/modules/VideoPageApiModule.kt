@@ -1,7 +1,6 @@
 package com.linkedin.dzmitrysalauyeu.demoappvideoplayer.di.modules
 
 import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.di.annotations.VideoPageApi
-import com.linkedin.dzmitrysalauyeu.demoappvideoplayer.videoscreen.data.apiservice.VideoPageApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,8 +16,4 @@ class VideoPageApiModule {
     @Singleton
     @VideoPageApi
     fun getVideoPageRetrofit(baseBuilder: Retrofit.Builder): Retrofit = baseBuilder.build()
-
-    @Provides
-    @Singleton
-    fun getVideoPageApi(@VideoPageApi retrofit: Retrofit): VideoPageApiService = retrofit.create(VideoPageApiService::class.java)
 }
