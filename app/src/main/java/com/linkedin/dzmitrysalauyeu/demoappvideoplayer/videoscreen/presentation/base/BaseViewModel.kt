@@ -9,11 +9,15 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 
 open class BaseViewModel : ViewModel() {
 
+    // Self-roast: why not private?
     val viewModelDisposables = CompositeDisposable()
 
     private val _viewModelErrorEvent = SingleLiveMutableEvent<Throwable>()
     val viewModelErrorEvent: LiveData<Throwable> = _viewModelErrorEvent
 
+    /**
+     * Self-roast: Who will write onLoading part?
+     */
     protected fun <T : Any> makeCall(
         single: Single<T>,
         onSuccess: (T) -> Unit,

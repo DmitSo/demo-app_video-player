@@ -15,6 +15,10 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 class VideoPagesInfoApiModule {
 
+    /**
+     * Base URL for accessing the video
+     * Self-roast: could be in build.gradle
+     */
     @Provides
     @Singleton
     @VideoPagesInfoApi
@@ -25,7 +29,7 @@ class VideoPagesInfoApiModule {
     @VideoPagesInfoApi
     fun getVideoPageOkHttp(baseOkHttpClientBuilder: OkHttpClient.Builder)  =
         baseOkHttpClientBuilder
-            .ignoreSecurityCertificates()
+            .ignoreSecurityCertificates()   // was a requirement according to the test task
             .build()
 
     @Provides
@@ -35,7 +39,7 @@ class VideoPagesInfoApiModule {
         baseRetrofitBuilder: Retrofit.Builder,
         @VideoPagesInfoApi videoPageOkHttpClient: OkHttpClient,
         @VideoPagesInfoApi baseUrl: String
-    ) = baseRetrofitBuilder
+    ): Retrofit = baseRetrofitBuilder
         .client(videoPageOkHttpClient)
         .baseUrl(baseUrl)
         .build()
@@ -44,5 +48,5 @@ class VideoPagesInfoApiModule {
     @Singleton
     fun provideVideoPagesInfoApiService(
         @VideoPagesInfoApi retrofit: Retrofit
-    ) = retrofit.create(VideoPagesInfoApiService::class.java)
+    ): VideoPagesInfoApiService = retrofit.create(VideoPagesInfoApiService::class.java)
 }

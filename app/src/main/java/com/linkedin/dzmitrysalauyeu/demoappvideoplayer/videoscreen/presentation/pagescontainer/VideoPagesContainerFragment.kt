@@ -26,6 +26,10 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class VideoPagesContainerFragment : Fragment() {
 
+    /**
+     * Lateinits.. idk, if you can use it, you can use it
+     */
+
     private val viewModel: VideoPagesContainerViewModel by viewModels()
     private lateinit var binding: FragmentVideoPagesContainerBinding
 
@@ -37,6 +41,9 @@ class VideoPagesContainerFragment : Fragment() {
 
     private lateinit var videoDataSourceFactory: DefaultDataSourceFactory
 
+    /**
+     * Self-roast: Data binding functionality haven't been used. Better to use ViewBinding or Compose
+     */
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -58,6 +65,22 @@ class VideoPagesContainerFragment : Fragment() {
         viewModel.requestVideoPagesInfo()
     }
 
+    /**
+     * Self-roast: should handle reinitializing at onResume, moving impl from onViewCreated!
+     * Also should save playback state of the active item and its position
+     * for screen rotation (VM, onSaveInstanceState, etc)
+     * Like that:
+     */
+//    override fun onResume() {
+//        super.onResume()
+//        initVideoPlayer()
+//        setupVideoPager()
+//        mySuperMethodToSaveState()
+//    }
+
+    /**
+     * Self-roast: following should be at onStop instead of onDestroy: when going to background, playback are active
+     */
     override fun onDestroy() {
         super.onDestroy()
 
@@ -89,6 +112,11 @@ class VideoPagesContainerFragment : Fragment() {
 
                     // get corresponding view to put video view in
                     // by getting viewholder and accessing the view from it
+
+                    /**
+                     * Self-roast: Styling should be more linear, avoid "!!",
+                     * add error processing right here or in VM
+                     */
 
                     // View == RecyclerView of viewpager
                     (getChildAt(0) as? RecyclerView)

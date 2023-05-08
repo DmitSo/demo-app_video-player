@@ -16,9 +16,9 @@ class VideoPageApiModule {
     @Provides
     @Singleton
     @VideoPageApi
-    fun getVideoPageRetrofit(baseBuilder: Retrofit.Builder) = baseBuilder.build()
+    fun getVideoPageRetrofit(baseBuilder: Retrofit.Builder): Retrofit = baseBuilder.build()
 
     @Provides
     @Singleton
-    fun getVideoPageApi(@VideoPageApi retrofit: Retrofit) = retrofit.create(VideoPageApiService::class.java)
+    fun getVideoPageApi(@VideoPageApi retrofit: Retrofit): VideoPageApiService = retrofit.create(VideoPageApiService::class.java)
 }
