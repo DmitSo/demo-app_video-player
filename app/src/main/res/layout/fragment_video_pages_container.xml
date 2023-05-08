@@ -1,16 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/video_pager_swipe_refresh"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context=".presentation.feature.pagescontainer.VideoPagesContainerFragment">
+        android:layout_height="match_parent">
 
         <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/videoPager"
+            android:id="@+id/video_pager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/loading_error_midscreen_image"
+        android:layout_width="@dimen/loading_error_icon_midscreen_size"
+        android:layout_height="@dimen/loading_error_icon_midscreen_size"
+        android:src="@drawable/ic_error_outline_24"
+        android:tint="@color/error"
+        android:layout_gravity="center"
+        android:visibility="visible"/>
+
+    <FrameLayout
+        android:id="@+id/loading_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/loading_screen_bg"
+        android:visibility="invisible">
+
+        <ProgressBar
+            android:layout_width="@dimen/loading_progress_bar_size"
+            android:layout_height="@dimen/loading_progress_bar_size"
+            android:layout_gravity="center"/>
+
     </FrameLayout>
-</layout>
+
+</FrameLayout>

@@ -19,7 +19,7 @@ abstract class ViewModelModule {
     @Binds
     @IntoMap
     @ViewModelKey(VideoPagesContainerViewModel::class)
-    abstract fun bindsAuthViewModel(viewModel: VideoPagesContainerViewModel?): ViewModel?
+    abstract fun bindsVideoContainerViewModel(viewModel: VideoPagesContainerViewModel?): ViewModel?
 
     @Binds
     abstract fun bindViewModelFactory(viewModelProviderFactory: ViewModelProviderFactory?): ViewModelProvider.Factory?

@@ -7,4 +7,12 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="loading_screen_bg">#AD000000</color>
+
+    <!-- Theming -->
+    <color name="primary">@color/purple_500</color>
+    <color name="primary_variant">@color/purple_700</color>
+    <color name="on_primary">@color/white</color>
+    <color name="error">#E16868</color>
 </resources>
